@@ -6,7 +6,7 @@ from openerp import models, fields, api
 from openerp.http import request
 
 
-class AuditlogtHTTPSession(models.Model):
+class AuditlogHTTPSession(models.Model):
     _name = 'auditlog.http.session'
     _description = u"Auditlog - HTTP User session log"
     _order = "create_date DESC"
