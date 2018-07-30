@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="attachment_sync_rule_form" model="ir.ui.view">
+        <field name="name">attachment.sync.rule.view.form</field>
+        <field name="model">ir.attachment.sync.rule</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="run_sync_now" type="object" class="oe_highlight" string="Sync Now"/>
+                </header>
+                <sheet>
+                <group name="top">
+                    <group name="left">
+                        <field name="name"/>
+                        <field name="source_model"/>
+                        <field name="location_id"/>
+                        <field name="sync_type"/>
+                    </group>
+                    <group name="right">
+                        <field name="sync_old_attachments"/>
+                        <field name="domain" placeholder="[('field_name','condition', value)]"/>
+                        <field name="frequency"/>
+                        <field name="last_sync_date"/>
+                    </group>
+                    <separator string="Tasks" colspan="4"/>
+                </group>
+                <group>
+                    <field name="task_ids" colspan="4" nolabel="1">
+                        <tree editable="bottom">
+                            <field name="name"/>
+                            <field name="name"/>
+                            <field name="method_type"/>
+                            <field name="filename"/>
+                            <field name="filepath"/>
+                        </tree>
+                    </field>
+                </group>
+                </sheet>
+            </form>
+        </field>
+      </record>
+    <record id="attachment_sync_rule_tree" model="ir.ui.view">
+        <field name="name">attachment.sync.rule.view.tree</field>
+        <field name="model">ir.attachment.sync.rule</field>
+        <field name="arch" type="xml">
+            <tree string="Attachment Sync Rules">
+                <field name="name"/>
+                <field name="source_model"/>
+                <field name="location_id"/>
+                <field name="sync_type"/>
+                <field name="last_sync_date"/>
+            </tree>
+        </field>
+      </record>
+
+    <record id="attachment_sync_rule_action" model="ir.actions.act_window">
+        <field name="name">Attachment Sync Rules</field>
+        <field name="res_model">ir.attachment.sync.rule</field>
+        <field name="view_type">form</field>
+        <field name='view_mode'>tree,form</field>
+        <field name="view_id" ref="attachment_sync_rule_tree"/>
+    </record>
+
+    <menuitem
+        id="main_menu_external_backup"
+        name="External Backup"
+        parent="base.menu_administration"
+        groups="group_backup_management"/>
+
+    <menuitem
+        id="attachment_sync_rules"
+        name="Attachment Sync Rules"
+        action="attachment_sync_rule_action"
+        parent="main_menu_external_backup"
+        sequence="1"/>
+</odoo>
