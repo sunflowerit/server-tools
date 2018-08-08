@@ -9,6 +9,7 @@ from odoo.tools.safe_eval import safe_eval
 class AttachmentSyncRule(models.Model):
     _name = 'ir.attachment.sync.rule'
     _description = 'Define Specific Rules for Cloud Sync'
+    _order = 'sequence'
 
     @api.model
     def _get_model_selection(self):
@@ -17,13 +18,13 @@ class AttachmentSyncRule(models.Model):
             ("ext_attachment_sync", "=", True)], order="name")
         return [(m.object, m.name) for m in model_objs]
 
+    sequence = fields.Integer(default=1)
     name = fields.Char('Name', required=True)
     source_model = fields.Many2one(
         'res.request.link', 'Source Model', required=True,
         domain=[('ext_attachment_sync', '=', True)])
     sync_type = fields.Selection(
         string='Sync Type', related='location_id.protocol', readonly=True)
-    frequency = fields.Integer('Frequency in Days', required=True)
     sync_old_attachments = fields.Boolean(
         'Sync Pre-existing Records',
         help="Only useful if you want to Upload existing attachments before "
@@ -51,16 +52,7 @@ class AttachmentSyncRule(models.Model):
 
     @api.multi
     def run_sync_now(self):
-        for this in self:
-            # Check if we need to sync old attachments
-            if this.sync_old_attachments:
-                model = this.source_model.object
-                if this.domain:
-                    domain = safe_eval(this.domain)
-                rec_ids = self.env[model].search(domain).ids
-                old_attachments = self.env['ir.attachment'].search([
-                    ('res_model', '=', model), ('res_id', 'in', rec_ids)])
-                old_attachments.create_metadata()
+        self.queue_for_sync()
         self.env.cr.commit()  # syncer creates a new cursor
         self.sync_created_metadata()
 
@@ -78,3 +70,17 @@ class AttachmentSyncRule(models.Model):
         self.write({
             'last_sync_date': fields.datetime.now(),
         })
+
+    @api.multi
+    def queue_for_sync(self):
+        """This creates metadata for the pre-existing records"""
+        for this in self:
+            # Check if we need to sync old attachments
+            if this.sync_old_attachments:
+                model = this.source_model.object
+                if this.domain:
+                    domain = safe_eval(this.domain)
+                rec_ids = self.env[model].search(domain).ids
+                old_attachments = self.env['ir.attachment'].search([
+                    ('res_model', '=', model), ('res_id', 'in', rec_ids)])
+                old_attachments.create_metadata()

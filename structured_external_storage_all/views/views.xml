@@ -7,6 +7,9 @@
             <form>
                 <header>
                     <button name="run_sync_now" type="object" class="oe_highlight" string="Sync Now"/>
+                    <button name="queue_for_sync" type="object"
+                        class="oe_highlight" string="Queue for Sync"
+                        attrs="{'invisible':[('sync_old_attachments', '=', False)]}"/>
                 </header>
                 <sheet>
                 <group name="top">
@@ -17,9 +20,9 @@
                         <field name="sync_type"/>
                     </group>
                     <group name="right">
+                        <field name="sequence"/>
                         <field name="sync_old_attachments"/>
                         <field name="domain" placeholder="[('field_name','condition', value)]"/>
-                        <field name="frequency"/>
                         <field name="last_sync_date"/>
                     </group>
                     <separator string="Tasks" colspan="4"/>
@@ -44,6 +47,7 @@
         <field name="model">ir.attachment.sync.rule</field>
         <field name="arch" type="xml">
             <tree string="Attachment Sync Rules">
+                <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="source_model"/>
                 <field name="location_id"/>
