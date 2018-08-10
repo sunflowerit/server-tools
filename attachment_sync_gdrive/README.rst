@@ -33,7 +33,7 @@ Contributors
 Images
 ------
 
-* Deviant Art: `Icon <https://www.deviantart.com/jasonh1234/art/Google-Drive-Icon-298243611>`_.
+* jasonh1234 - Deviant Art: `Icon <https://www.deviantart.com/jasonh1234/art/Google-Drive-Icon-298243611>`_.
 
 Maintainer
 ----------

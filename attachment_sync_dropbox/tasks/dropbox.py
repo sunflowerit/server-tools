@@ -5,6 +5,7 @@
 from odoo.tools import config
 from dropbox import exceptions as dropbox_exceptions
 from odoo.exceptions import UserError, ValidationError
+from odoo import _
 import logging
 _logger = logging.getLogger(__name__)
 try:
@@ -30,9 +31,9 @@ class DropboxTask:
         try:
             self.conn.files_upload(data, path)
         except dropbox_exceptions.AuthError:
-            raise ValidationError("Dropbox: Access Key not valid!")
+            raise ValidationError(_("Dropbox: Access Key not valid!"))
         except dropbox_exceptions.BadInputError:
-            raise ValidationError("Dropbox: Access Key is malformed!")
+            raise ValidationError(_("Dropbox: Access Key is malformed!"))
 
     @staticmethod
     def connect(location):

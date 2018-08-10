@@ -6,7 +6,7 @@
 Structured External Storage All Attachments
 ===========================================
 
-Create ir.attachment.metadata records for the attachments to sync to respective
+Creates ir.attachment.metadata records for the attachments to sync to respective
 clouds: Dropbox, Google Drive, Amazon S3 Bucket.
 
 Installation
@@ -17,6 +17,8 @@ Configuration
 =============
 
 - Create the Sync Rules in *Settings->External Backup->Attachment Sync Rules*
+- And before that, add any models you want to sync attachments for
+in "Referencable Models": *Settings->Technical->Sequence & Identifiers->External Identifiers*
 
 Credits
 =======

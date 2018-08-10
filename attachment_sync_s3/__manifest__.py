@@ -11,7 +11,7 @@
     "license": "AGPL-3",
     "summary": "Sync Attachments to Amazon S3 Bucket",
     "depends": [
-        "structured_external_storage_all",
+         "external_file_location",
     ],
     "data": [
         "data/sync_data.xml",

@@ -11,7 +11,7 @@
     "license": "AGPL-3",
     "summary": "Sync Attachments to Google Drive",
     "depends": [
-        "structured_external_storage_all",
+        "external_file_location",
         "google_drive",
     ],
     "data": [

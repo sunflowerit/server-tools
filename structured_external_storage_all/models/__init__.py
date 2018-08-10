@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from . import ir_attachment
 from . import ir_attachment_sync_rule
