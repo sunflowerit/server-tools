@@ -18,7 +18,7 @@
 
     <act_window id="action_attachment_sync_all"
         multi="True"
-        key2="client_action_multi" name="Sync All Now"
+        key2="client_action_multi" name="Queue and Sync All"
         res_model="ir.attachment.sync.rule.all" src_model="ir.attachment.sync.rule"
         view_mode="form" target="new" view_type="form" />
 
