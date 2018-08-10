@@ -18,6 +18,8 @@
         "views/views.xml",
         "views/res_request_link.xml",
         "views/ir_attachment_metadata.xml",
+        "wizard/attachment_sync_rule_all.xml",
+        "wizard/attachment_sync_create_metas_all.xml",
         "security/ir.model.access.csv",
     ],
     "installable": True,

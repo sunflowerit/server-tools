@@ -20,15 +20,12 @@ class AttachmentSyncRule(models.Model):
 
     sequence = fields.Integer(default=1)
     name = fields.Char('Name', required=True)
+    active = fields.Boolean(default=True)
     source_model = fields.Many2one(
         'res.request.link', 'Source Model', required=True,
         domain=[('ext_attachment_sync', '=', True)])
     sync_type = fields.Selection(
         string='Sync Type', related='location_id.protocol', readonly=True)
-    sync_old_attachments = fields.Boolean(
-        'Sync Pre-existing Records',
-        help="Only useful if you want to Upload existing attachments before "
-        "the installation of this module")
     last_sync_date = fields.Datetime('Last Sync Date')
     location_id = fields.Many2one(
         'external.file.location', 'Sync Name', required=True)
@@ -37,7 +34,7 @@ class AttachmentSyncRule(models.Model):
         help='Conditions that will apply to the '
         'select model. E.g [(amount, '>', 500, )]')
     task_ids = fields.One2many(
-        'external.file.task', related='location_id.task_ids')
+        'external.file.task', related='location_id.task_ids', readonly=True)
 
     @api.one
     @api.constrains('domain')
@@ -75,12 +72,11 @@ class AttachmentSyncRule(models.Model):
     def queue_for_sync(self):
         """This creates metadata for the pre-existing records"""
         for this in self:
-            # Check if we need to sync old attachments
-            if this.sync_old_attachments:
-                model = this.source_model.object
-                if this.domain:
-                    domain = safe_eval(this.domain)
-                rec_ids = self.env[model].search(domain).ids
-                old_attachments = self.env['ir.attachment'].search([
-                    ('res_model', '=', model), ('res_id', 'in', rec_ids)])
-                old_attachments.create_metadata()
+            # Sync old attachments here
+            model = this.source_model.object
+            if this.domain:
+                domain = safe_eval(this.domain)
+            rec_ids = self.env[model].search(domain).ids
+            old_attachments = self.env['ir.attachment'].search([
+                ('res_model', '=', model), ('res_id', 'in', rec_ids)])
+            old_attachments.create_metadata()

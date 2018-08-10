@@ -23,8 +23,14 @@ class Attachment(models.Model):
             # check if res_model is in the define rules.
             if attachment.res_model in all_rules:
                 sync_rule = sync_rule_obj.search(
-                    [('source_model.object', '=', attachment.res_model)],
-                    order='sequence asc', limit=1)
+                    [('source_model.object', '=', attachment.res_model),
+                     ('sequence', '<', 10)],
+                    order='sequence asc')
+                if not sync_rule:
+                    sync_rule = sync_rule_obj.search(
+                        [('source_model.object', '=', attachment.res_model)],
+                        order='sequence asc', limit=1)
+
                 for rule in sync_rule:
                     # Check if attachment already exists in the metas
                     metadata_obj = self.env['ir.attachment.metadata']
