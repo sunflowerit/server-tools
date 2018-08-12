@@ -30,9 +30,8 @@ class AttachmentSyncRule(models.Model):
     location_id = fields.Many2one(
         'external.file.location', 'Sync Name', required=True)
     domain = fields.Char(
-        'Domain', default=[],
-        help="Conditions that will apply to the "
-        "select model. E.g [(amount, ">", 500, )]")
+        'Domain', default="[]",
+        help="Conditions that will apply e.g [(amount, condition, 500, )]")
     task_ids = fields.One2many(
         'external.file.task', related='location_id.task_ids', readonly=True)
 
