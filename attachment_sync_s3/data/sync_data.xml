@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<odoo>
-    <data noupdate="1">
+<odoo noupdate="1">
+
     <record id="location_amazon_s3" model="external.file.location">
         <field name="name">Amazon S3 Sync</field>
         <field name="protocol">amazon_s3</field>
@@ -15,5 +15,5 @@
         <field name="filepath">odoo_sync</field>
         <field name="name">Amazon S3 Task</field>
     </record>
-    </data>
+
 </odoo>
