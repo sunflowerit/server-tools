@@ -34,15 +34,14 @@ class AmazonS3Task:
 
     @staticmethod
     def connect(location):
-        if location.bucket_name and location.s3_access_key_id and \
-                location.secret_access_key:
-            conn = AmazonS3Task(
-                location.bucket_name,
-                location.s3_access_key_id,
-                location.secret_access_key)
-        else:
+        if config.get('s3_bucket_name') and config.get('s3_access_key_id'):
             bucket_name = config.get('s3_bucket_name')
             access_key_id = config.get('s3_access_key_id')
             secret_access_key = config.get('s3_secret_access_key')
             conn = AmazonS3Task(bucket_name, access_key_id, secret_access_key)
+        else:
+            conn = AmazonS3Task(
+                location.bucket_name,
+                location.s3_access_key_id,
+                location.secret_access_key)
         return conn

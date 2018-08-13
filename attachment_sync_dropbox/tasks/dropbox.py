@@ -37,9 +37,9 @@ class DropboxTask:
 
     @staticmethod
     def connect(location):
-        if location.access_key_id:
-            access_key_id = location.access_key_id
-        else:
+        if config.get('dropbox_access_key_id'):
             access_key_id = config.get('dropbox_access_key_id')
+        else:
+            access_key_id = location.access_key_id
         conn = DropboxTask(access_key_id)
         return conn
