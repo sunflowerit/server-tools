@@ -29,6 +29,7 @@ class DropboxTask:
 
     def setcontents(self, path, data=None):
         try:
+            path = '/' + (path or '').lstrip('/')
             self.conn.files_upload(data, path)
         except dropbox_exceptions.AuthError:
             raise ValidationError(_("Dropbox: Access Key not valid!"))
