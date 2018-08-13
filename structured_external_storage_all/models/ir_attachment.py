@@ -2,6 +2,7 @@
 # © 2018 Sunflower IT (http://sunflowerweb.nl)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 from odoo import models, fields, api, _
+from odoo.tools.safe_eval import safe_eval
 
 
 class Attachment(models.Model):
@@ -23,9 +24,14 @@ class Attachment(models.Model):
             ], order='sequence asc')
             selected_matching_rules = []
             for rule in all_matching_rules:
+                if rule.domain:
+                    domain = safe_eval(rule.domain)
+                    domain.append(('id', '=', attachment.res_id))
+                    if not self.env[attachment.res_model].search(domain):
+                        continue
                 previous_rules_with_same_loc_and_lower_seq = [
                     previous_rule for previous_rule in selected_matching_rules
-                    if previous_rule.location_id == rule.location_id
+                    if previous_rule.sync_type == rule.sync_type
                        and previous_rule.sequence < rule.sequence
                 ]
                 if not previous_rules_with_same_loc_and_lower_seq:
