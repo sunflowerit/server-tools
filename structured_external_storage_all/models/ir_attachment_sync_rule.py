@@ -2,7 +2,7 @@
 # © 2018 Sunflower IT (http://sunflowerweb.nl)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import ValidationError
 from odoo.tools.safe_eval import safe_eval
 
 
@@ -29,6 +29,8 @@ class AttachmentSyncRule(models.Model):
     last_sync_date = fields.Datetime('Last Sync Date')
     location_id = fields.Many2one(
         'external.file.location', 'Sync Name', required=True)
+    file_name_format = fields.Char(
+        'File Name Format', required=True, default="${object.name}")
     domain = fields.Char(
         'Domain', default="[]",
         help="Conditions that will apply e.g [(amount, condition, 500, )]")
@@ -42,8 +44,9 @@ class AttachmentSyncRule(models.Model):
         domain = safe_eval(self.domain)
         for leaf in domain:
             if not isinstance(leaf, tuple) or not len(leaf) == 3:
-                raise ValidationError(_("Domain should have the format "
-                    "'[('field_name', 'condition', value), ...]'"))
+                raise ValidationError(
+                    _("Domain should have the format "
+                      "'[('field_name', 'condition', value), ...]'"))
         model_obj.search(domain)  # Testing if domain works
 
     @api.multi
