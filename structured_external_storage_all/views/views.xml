@@ -30,7 +30,7 @@
                     <group name="right">
                         <field name="sequence"/>
                         <field name="domain" placeholder="[('field_name','condition', value)]"/>
-                        <field name="file_name_format"/>
+                        <field name="file_name_format" placeholder="${object.name}"/>
                         <field name="last_sync_date"/>
                     </group>
                     <separator string="Tasks" colspan="4"/>
