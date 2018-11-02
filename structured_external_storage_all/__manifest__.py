@@ -15,7 +15,6 @@
     ],
     "data": [
         "security/res_groups.xml",
-        "data/ir_config_parameter.xml",
         "views/views.xml",
         "views/res_request_link.xml",
         "views/ir_attachment_metadata.xml",

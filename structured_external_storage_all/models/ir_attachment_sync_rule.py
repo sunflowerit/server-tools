@@ -59,12 +59,12 @@ class AttachmentSyncRule(models.Model):
     def sync_created_metadata(self):
         # Proceed to sync the created metadata
         batch_limit = self.env.ref(
-            'structured_external_storage_all.attachment_sync_cron_batch_limit')\
+            'attachment_base_synchronize.attachment_sync_cron_batch_limit')\
             .value
         if batch_limit and batch_limit.isdigit():
             limit = int(batch_limit)
         else:
-            limit = 500
+            limit = 200
         meta_data = self.env['ir.attachment.metadata'].search([
             ('location_id', '=', self.location_id.id),
             ('state', 'in', ('pending', 'failed'))
