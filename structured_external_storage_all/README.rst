@@ -19,7 +19,7 @@ Configuration
 - Create the Sync Rules in *Settings->External Backup->Attachment Sync Rules*
 - And before that, add any models you want to sync attachments for
 in "Referencable Models": *Settings->Technical->Sequence & Identifiers->External Identifiers*
-- Use templating for custom file names E.g ${object.name} for Sale Orders will
+- Use Jinja templates for custom file names E.g ${object.name} for Sale Orders will
 save the file as SO001.pdf depending on the SO name
 
 Credits

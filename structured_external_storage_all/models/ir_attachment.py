@@ -10,14 +10,8 @@ from werkzeug import urls
 from jinja2.sandbox import SandboxedEnvironment
 _logger = logging.getLogger(__name__)
 jinja2_template_env = SandboxedEnvironment(
-    block_start_string="<%",
-    block_end_string="%>",
     variable_start_string="${",
     variable_end_string="}",
-    comment_start_string="<%doc>",
-    comment_end_string="</%doc>",
-    line_statement_prefix="%",
-    line_comment_prefix="##",
     trim_blocks=True,               # do not output newline after blocks
     autoescape=True,                # XML/HTML automatic escaping
 )
