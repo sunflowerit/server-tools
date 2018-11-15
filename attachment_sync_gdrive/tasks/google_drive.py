@@ -8,6 +8,8 @@ from oauth2client.client import AccessTokenCredentials
 from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 from odoo.tools.mimetypes import guess_mimetype
 
+FOLDER = 'application/vnd.google-apps.folder'
+
 
 class GoogleDriveTask:
     _key = 'google_drive'
@@ -35,8 +37,11 @@ class GoogleDriveTask:
         fh = BytesIO(data)
         media_body = MediaIoBaseUpload(fh, chunksize=-1, mimetype=mimetype,
                                        resumable=True)
+
+        if path.startswith('/'):  # Just incase folder_path starts with "/"
+            path = path[1:]
+        file_name = path.split('/', 1)[1]
         # construct upload kwargs
-        file_name = path.split('/')[-1]
         create_kwargs = {
             'body': {
                 'name': file_name  # Get the last bit, ignore dirs
@@ -44,47 +49,47 @@ class GoogleDriveTask:
             'media_body': media_body,
             'fields': 'id'
         }
-        # walk through parent directories
-        parent_id = ''
-        if path:
-            walk_folders = True
-            folder_kwargs = {
-                'body': {
-                    'name': '',
-                    'mimeType': 'application/vnd.google-apps.folder'
-                },
-                'fields': 'id'
+
+        def iterfiles(name=None, is_folder=True, parent=None,
+                      order_by='folder,name,createdTime'):
+            q = []
+            if name is not None:
+                q.append("name = '%s'" % name.replace("'", "\\'"))
+            if is_folder is not None:
+                q.append(
+                    "mimeType %s '%s'" % ('=' if is_folder else '!=', FOLDER))
+            if parent is not None:
+                q.append("'%s' in parents" % parent.replace("'", "\\'"))
+            params = {'pageToken': None, 'orderBy': order_by}
+            if q:
+                q.append("trashed = false")  # skip trash
+                params['q'] = ' and '.join(q)
+            while True:
+                response = drive_client.list(**params).execute()
+                for f in response['files']:
+                    yield f
+                try:
+                    params['pageToken'] = response['nextPageToken']
+                except KeyError:
+                    return
+
+        folder_name = path.split('/')[0]
+        folder_details = list(iterfiles(folder_name))
+        if folder_details and 'id' in folder_details[0]:
+            folder_id = folder_details[0].get('id')
+            drive_space = folder_id
+        else:
+            # Create a new folder and obtain the id
+            file_metadata = {
+                'name': folder_name,
+                'mimeType': FOLDER
             }
-            query_kwargs = {
-                'spaces': 'drive',
-                'fields': 'files(id, parents)'
-            }
-            folder_name = path.split('/')[0]
+            new_folder = drive_client.create(
+                body=file_metadata, fields='id').execute()
+            folder_id = new_folder.get('id')
+            drive_space = folder_id
 
-            folder_kwargs['body']['name'] = folder_name
-
-            # search for folder id in existing hierarchy
-            if walk_folders:
-                walk_query = "name = '%s'" % folder_name
-                if parent_id:
-                    walk_query += "and '%s' in parents" % parent_id
-                query_kwargs['q'] = walk_query
-                response = drive_client.list(**query_kwargs).execute()
-                file_list = response.get('files', [])
-            else:
-                file_list = []
-            if file_list:
-                folder_id = file_list[0].get('id')
-
-            else:
-                file_metadata = {
-                    'name': folder_name,
-                    'mimeType': 'application/vnd.google-apps.folder'
-                }
-                new_folder = drive_client.create(body=file_metadata, fields='id').execute()
-                folder_id = new_folder.get('id')
-
-        drive_space = folder_id
+        # TODO: save folder id for subsequent uploads, dont' search again
         create_kwargs['body']['parents'] = [drive_space]
 
         # send create request
