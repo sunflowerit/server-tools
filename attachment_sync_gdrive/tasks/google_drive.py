@@ -61,7 +61,6 @@ class GoogleDriveTask:
             }
             folder_name = path.split('/')[0]
 
-            folder_name = folder_name
             folder_kwargs['body']['name'] = folder_name
 
             # search for folder id in existing hierarchy
@@ -84,7 +83,6 @@ class GoogleDriveTask:
                 }
                 new_folder = drive_client.create(body=file_metadata, fields='id').execute()
                 folder_id = new_folder.get('id')
-                walk_folders = False
 
         drive_space = folder_id
         create_kwargs['body']['parents'] = [drive_space]
