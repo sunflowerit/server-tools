@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 # © 2016 Therp BV <http://therp.nl>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+import logging
 import pytz
 from dateutil.rrule import rrule, rruleset
 from dateutil.tz import gettz
-from openerp import fields, models
+from openerp import _, fields, models
+
+
+_logger = logging.getLogger(__name__)
+
 _RRULE_DATETIME_FIELDS = ['_until', '_dtstart']
 _RRULE_SCALAR_FIELDS = [
     '_wkst', '_cache', '_until', '_dtstart', '_count', '_freq', '_interval',
@@ -30,6 +35,25 @@ class SerializableRRuleSet(list):
     stuff in __iter__"""
     def __init__(self, *args):
         self._rrule = list(args)
+
+        def _as_utc(_date):
+            if _date and _date.tzinfo:
+                return _date.astimezone(pytz.utc)
+            elif _date:
+                _logger.warning(
+                    _('Warning: naive datetime %s interpreted as UTC'),
+                    str(_date))
+                return _date
+            else:
+                return _date
+
+        # Datetime-aware rrules are difficult to serialize, so we store as UTC
+        # NOTE: any naive timezones are _assumed_ to be in UTC, as we cannot
+        # retrieve the Odoo user's timezone at this point
+        if self._rrule:
+            self._rrule[0]._dtstart = _as_utc(self._rrule[0]._dtstart)
+            self._rrule[0]._until = _as_utc(self._rrule[0]._until)
+
         self.tz = None
         super(SerializableRRuleSet, self).__init__(self)
 
