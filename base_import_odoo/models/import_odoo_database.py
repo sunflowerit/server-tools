@@ -12,6 +12,7 @@ import psycopg2
 import traceback
 from urlparse import urlparse
 from openerp import _, api, exceptions, fields, models, tools
+from openerp.tools.safe_eval import safe_eval
 from collections import namedtuple
 _logger = logging.getLogger('base_import_odoo')
 
@@ -118,7 +119,7 @@ class ImportOdooDatabase(models.Model):
             model = model_line.model_id
             remote_ids[model.model] = remote.execute(
                 model.model, 'search',
-                tools.safe_eval(model_line.domain) if model_line.domain else []
+                safe_eval(model_line.domain) if model_line.domain else []
             )
             remote_counts[model.model] = len(remote_ids[model.model])
         self.write({
@@ -150,7 +151,8 @@ class ImportOdooDatabase(models.Model):
                     to_delete, field_context(None, None, None),
                 )
                 try:
-                    self._run_import_model(context)
+                    with self.env.norecompute():
+                        self._run_import_model(context)
                 except:  # noqa: E722
                     # pragma: no cover
                     error = traceback.format_exc()
@@ -162,6 +164,8 @@ class ImportOdooDatabase(models.Model):
                     self.env.cr.commit()
                     raise
                 done[model._name] += len(ids)
+                # this write will trigger a recomputation of imported records
+                self.env.invalidate_all()
                 self.write({'status_data': dict(self.status_data, done=done)})
 
                 if commit and not tools.config['test_enable']:
@@ -183,6 +187,22 @@ class ImportOdooDatabase(models.Model):
         for data in context.remote.execute(
                 model._name, 'read', context.ids, fields.keys()
         ):
+            model_defaults = {}
+            if context.model_line.defaults:
+                model_defaults.update(safe_eval(context.model_line.defaults))
+            for key, value in model_defaults.items():
+                if not data.get(key):
+                  data[key] = value
+            if context.model_line.postprocess:
+                safe_eval(
+                    context.model_line.postprocess, {
+                        'vals': data,
+                        'env': self.env,
+                        '_id': data['id'],
+                        'remote': context.remote,
+                    },
+                    mode='exec',
+                )
             self._run_import_get_record(
                 context, model, data, create_dummy=False,
             )
@@ -248,9 +268,12 @@ class ImportOdooDatabase(models.Model):
         })
 
     def _create_record_filter_fields(self, model, record):
-        """Return a version of record with unknown fields for model removed"""
+        """Return a version of record with unknown fields for model removed
+        and required fields with no value set to the default if it exists"""
+        defaults = model.default_get(record.keys())
         return {
             key: value
+            if value or not model._fields[key].required else defaults.get(key)
             for key, value in record.items()
             if key in model._fields
         }
@@ -259,6 +282,7 @@ class ImportOdooDatabase(models.Model):
         """Return a context that is used when creating a record"""
         context = {
             'tracking_disable': True,
+            'auditlog_disabled': True,
         }
         if model._name == 'res.users':
             context['no_reset_password'] = True
@@ -437,13 +461,20 @@ class ImportOdooDatabase(models.Model):
             elif field.type in ['many2one']:
                 if name in model._inherits.values():
                     continue
+                if not record.get(name):
+                    _logger.error(
+                        'No value for %s in %s[%d] - you probably need to set '
+                        'a value via default or postprocess',
+                        name, model._name, record['id'],
+                    )
+                    continue
                 new_context = context.with_field_context(
                     model._name, name, record['id']
                 )
                 value = self._run_import_get_record(
                     new_context,
                     self.env[model._fields[name].comodel_name],
-                    {'id': record.get(name, [None])[0]},
+                    {'id': record[name][0]},
                 )
             elif field.type in ['selection'] and not callable(field.selection):
                 value = field.selection[0][0]
@@ -482,7 +513,10 @@ class ImportOdooDatabase(models.Model):
                 continue
             ids = data[field_name] if (
                 model._fields[field_name].type != 'many2one'
-            ) else [data[field_name][0]]
+            ) else [
+                isinstance(data[field_name], int) and
+                data[field_name] or data[field_name][0]
+            ]
             new_context = context.with_field_context(
                 model._name, field_name, data['id']
             )
@@ -547,7 +581,10 @@ class ImportOdooDatabase(models.Model):
             name: field
             for name, field
             in self.env[context.model_line.model_id.model]._fields.items()
-            if not field.compute or field.related
+            if not (
+                field.compute and not field.related or
+                field.column and not field.column._classic_write
+            )
         }
 
     @api.multi
