@@ -19,13 +19,23 @@ odoo.define('profiler.tour', function(require) {
         position: "bottom"
       },
       {
+        trigger: '.o_list_view',
+        run: function () {
+          // Hack to wait for 500 ms before entering next step
+          _.delay(function () {
+            $(".o_list_button_add").addClass('ready');
+          }, 500);
+        },
+      },
+
+      {
         content: _t("Let's create a new profiler session."),
-        trigger: ".o_list_button_add",
+        trigger: ".o_list_button_add.ready",
         position: "right",
       },
       {
         content: _t("Give this session a name."),
-        trigger: "input[name='name']",
+        trigger: "h1 input.o_form_field",
         extra_trigger: ".o_form_editable",
         position: "right",
       },
@@ -33,7 +43,9 @@ odoo.define('profiler.tour', function(require) {
         content: _t("Select a profiling method."),
         trigger: "select[name='python_method']",
         position: "right",
-        run: "text Per HTTP request",
+        run: function() {
+          $('select[name="python_method"]').val('"request"');
+        },
       },
       {
         content: _t("When you are happy, save it."),
@@ -42,15 +54,19 @@ odoo.define('profiler.tour', function(require) {
       },
       {
         content: _t("Now enable it to start profiling."),
-        trigger: ".o_statusbar_buttons button:containsExact(Enable)",
+        trigger: "button:has(span:containsExact(Enable))",
         extra_trigger: ".o_form_readonly",
         position: "right",
       },
       {
         content: _t("Now disable it to stop profiling."),
-        trigger: ".o_statusbar_buttons button:containsExact(Disable)",
+        trigger: "button:has(span:containsExact(Disable))",
         extra_trigger: ".o_form_readonly",
         position: "right",
+      },
+      {
+        content: _t("We now have measurements."),
+        trigger: "td[data_field='total_time']",
       },
     ]
   );
