@@ -52,7 +52,7 @@ _logger = logging.getLogger(__name__)
 class ProfilerProfileRequestLine(models.Model):
     _name = 'profiler.profile.request.line'
     _description = 'Profiler HTTP request Line to save cProfiling results'
-    _order = 'create_date DESC'
+    _order = 'total_time DESC'
 
     profile_id = fields.Many2one('profiler.profile', required=True,
                                  ondelete='cascade')
