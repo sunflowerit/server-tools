@@ -156,7 +156,6 @@
                                     <field name="create_date"/>
                                     <field name="total_time"/>
                                     <field name="user_id"/>
-                                    <field name="attachment_id"/>
                                 </tree>
                             </field>
                         </page>
