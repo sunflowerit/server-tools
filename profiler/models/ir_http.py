@@ -24,7 +24,7 @@ class IrHttp(models.AbstractModel):
             with ProfilerProfile.profiling():
                 ret = super(IrHttp, cls)._dispatch()
             end = timer()
-            ProfilerProfile.enable = False
+            ProfilerProfile.enabled = False
             request_line = profiler.sudo().create_request_line()
             request_line.dump_stats()
             request_line.total_time = (end - start) * 1000.0
