@@ -66,7 +66,7 @@ odoo.define('profiler.tour', function(require) {
       },
       {
         content: _t("We now have measurements."),
-        trigger: "td[data_field='total_time']",
+        trigger: "td[data-field='total_time']",
       },
     ]
   );
