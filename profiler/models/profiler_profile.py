@@ -1,4 +1,5 @@
 
+import time
 import base64
 import logging
 import os
@@ -6,6 +7,8 @@ import pstats
 import re
 import subprocess
 import sys
+import tempfile
+
 from contextlib import contextmanager
 from cProfile import Profile
 
@@ -159,6 +162,19 @@ class ProfilerProfile(models.Model):
         ('full', 'All activity'),
         ('request', 'Per HTTP request'),
     ]
+
+    @api.multi
+    def fill_up_memory(self):
+        d = dict()
+        for i in range(0, 100000000):
+            d[i] = 'A'*1024
+            if i % 10000 == 0:
+                print(i)
+
+    @api.multi
+    def take_record_lock(self):
+        self.write(dict(name=self.name))
+        time.sleep(60*60)
 
     @api.multi
     def create_request_line(self):

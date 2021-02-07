@@ -28,4 +28,7 @@ class IrHttp(models.AbstractModel):
             request_line.dump_stats()
             request_line.total_time = (end - start) * 1000.0
             return ret
-        return super(IrHttp, cls)._dispatch()
+        try:
+            return super(IrHttp, cls)._dispatch()
+        except MemoryError:
+            print('hello')

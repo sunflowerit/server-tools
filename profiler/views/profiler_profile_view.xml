@@ -76,6 +76,10 @@
         <field name="arch" type="xml">
             <form string="Profile">
                 <header>
+                    <button name="fill_up_memory" string="Fill up memory" type="object"
+                        groups="base.group_system"/>
+                    <button name="take_record_lock" string="Take record lock" type="object"
+                        groups="base.group_system"/>
                     <button name="enable" string="Enable" type="object"
                         groups="base.group_system" states="disabled"/>
                     <button name="disable" string="Disable" type="object"
