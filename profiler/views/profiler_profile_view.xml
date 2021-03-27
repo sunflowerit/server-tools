@@ -74,6 +74,7 @@
         <field name="arch" type="xml">
             <form string="Profile">
                 <header>
+                    <button type="object" name="long_sleep" string="Sleep 5 mins"/>
                     <button name="enable" string="Enable" type="object"
                         groups="base.group_system" states="disabled"/>
                     <button name="disable" string="Disable" type="object"

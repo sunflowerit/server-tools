@@ -167,6 +167,11 @@ class ProfilerProfile(models.Model):
     ]
 
     @api.multi
+    def long_sleep(self):
+        import time
+        time.sleep(60*5)
+
+    @api.multi
     def create_request_line(self):
         """Create a record corresponding to the current HTTP request and return
         it. If no HTTP request is available, return None."""
