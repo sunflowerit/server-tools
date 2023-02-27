@@ -1,13 +1,13 @@
-# Copyright 2017 Akretion (http://www.akretion.com)
+# Copyright 2016 Akretion (http://www.akretion.com)
 # Sébastien BEAU <sebastien.beau@akretion.com>
 # Raphaël Reverdy <raphael.reverdy@akretion.com>
-# Copyright 2020 Camptocamp SA (http://www.camptocamp.com)
+# Copyright 2019 Camptocamp SA (http://www.camptocamp.com)
 # Simone Orsi <simahawk@gmail.com>
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 
 import logging
 
-from odoo import api, fields, models, tools
+from odoo import _, api, fields, models, tools
 from odoo.exceptions import UserError
 from odoo.tools.misc import format_duration
 from odoo.tools.translate import _
@@ -124,11 +124,15 @@ class Base(models.AbstractModel):
                 resolver = field_dict.get("resolver")
                 value = rec._jsonify_value(field, rec[field.name])
                 value = resolver.resolve(field, rec)[0] if resolver else value
-
-            self._add_json_key(root, json_key, value)
+            if rec.env.context.get('with_fieldname'):
+                 # translation will be fetched automatically from context
+                 fieldname = _(field.string)
+                 self._add_json_key(root, json_key, {'value': value, 'fieldname': fieldname })
+            else:
+                 self._add_json_key(root, json_key, value)
         return root
 
-    def jsonify(self, parser, one=False):
+    def jsonify(self, parser, one=False, with_fieldname=False):
         """Convert the record according to the given parser.
 
         Example of (simple) parser:
@@ -158,10 +162,12 @@ class Base(models.AbstractModel):
         to the value. the name of the field will be translated if the 'lang' key
         is present too. example
 
-        parser =  {
-            'fields': ['name', 'create_date'  ('order_line', ['id'  'Product_id', ref])],
-            'with_fieldname': False,
-        }  
+        rec.jsonify(
+            parser=['name', 'create_date', 
+                    'order_line', ['id' , 'product_uom', 'is_expense'])],
+            with_fieldname=False)
+
+          
 
         returns:
 
@@ -169,47 +175,51 @@ class Base(models.AbstractModel):
                    'create_date': '2022-10-14T15:55:39.823019+02:00', 
                    'order_line': {
                          'id': 4, 
-                         'name': 'My client's name', 
-                         'ref': 'MYCLI1'}
+                         'product_uom': 'Stuk(s)
+                         'is_expense': False}
                     }]
 
-        parser =  {
-            'fields': ['name',  ('order_line', ['id'  'name'])],
-            'with_fieldname': True,
-        }  
+        rec.jsonify(
+            parser=['name', 'create_date', 
+                    'order_line', ['id' , 'product_uom', 'is_expense'])],
+            with_fieldname=True)
 
         would give us:
-        [{'name': { value: 'SO/2022/006', 'fieldname': 'Name'}
-          'create_date': {'value': '2022-10-14T15:55:39.823019+02:00', 'fieldname': 'Created On'},
-           'order_line': {'value': {
-                             'id': 4, 
-                             'name': 'My client's name', 
-                             'ref': 'MYCLI1'},
-                         
-
-              }]
+        [{'name': { value: 'SO/2022/006', 'fieldname': 'Name'},
+          'create_date': {
+                         'value': '2022-10-14T15:55:39.823019+02:00', 
+                         'fieldname': 'Created On'},
+          'order_line': {'value': {
+                             'id': {'value':  4, 'fieldname': 'ID'}, 
+                             'Product_uom': {'value': 'Stuks',  
+                                             'fieldname': 'Unit Of measure'},
+                             'is_expense': {'value': False  , 
+                                            'fieldname': 'Is an Expense'}}
+                         },
+                         fieldname: 'Sale Order Lines'
+              }
+        ]
          
         therefore the value of the field will be accessed not anymore as:
 
                 result['name']
-                result['order_line']['ref']
+                result['order_line']['product_uom']
 
         but:
 
-                result['name']['value']  
+                result['name']['value']  # get value of field.name
                 result['name']['fieldname']   # get the translated fieldname of name
-                result['order_line']['value']['ref']['value']
-                result['order_line']['value']['ref']['fieldname'] # get the translated fieldname of ref
+                # get value of field.order_line.product_uom.
+                result['order_line']['value']['product_uom']['value'] 
+                # fieldname of  field.order_line.product_uom
+                result['order_line']['value']['product_uom']['fieldname'] 
               
-        I need to use {'value':x, 'fieldname': y}  because the jsone name (order_line) may be duplicated
-        in the various levels of relational fields.
-
+        I need to use structure{'value':x, 'fieldname': y}  because the json name 
+        (order_line) may be duplicated in the various levels of relational fields.
 
         """
         if one:
             self.ensure_one()
-        import pudb
-        pudb.set_trace()
         if isinstance(parser, list):
             parser = convert_simple_to_full_parser(parser)
         resolver = parser.get("resolver")
@@ -226,6 +236,8 @@ class Base(models.AbstractModel):
         for lang in parsers:
             translate = lang or parser.get("language_agnostic")
             records = records.with_context(lang=lang) if translate else records
+            records = records.with_context(
+                    with_fieldname=True) if with_fieldname else records
             for record, json in zip(records, results):
                 self._jsonify_record(parsers[lang], record, json)
 
